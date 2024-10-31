@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Categories;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\CategoriesResource;
 
 class CategoriesController extends Controller
 {
@@ -13,11 +15,25 @@ class CategoriesController extends Controller
      */
     public function index()
     {
-        $categories = Categories::latest()->get();
+        $categories = Categories::when(request()->search, function ($query) {
+            $query->where('name', 'like', '%' . request()->search . '%');
+        })->latest()->paginate(10);
 
-        return response()->json([
-            'data' => $categories
-        ]);
+        if ($categories->isEmpty()) {
+            return new CategoriesResource(true, 'Data Categories Not Found', null, [
+                'code' => 200
+            ], 200);
+        }
+
+        return new CategoriesResource(
+            true,
+            'List Data Categories',
+            $categories,
+            [
+                'code' => 200,
+                'total_categories' => $categories->count()
+            ], 200
+        );
     }
 
     /**
@@ -25,7 +41,28 @@ class CategoriesController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $data = $request->validate([
+            'name' => 'required|string|max:255|min:3',
+        ]);
+
+        try {
+            $data['slug'] = Str::slug($data['name']);
+            $categories = Categories::create($data);
+
+            $categoriesResponse = [
+                'uuid' => $categories->uuid,
+                'name' => $categories->name, 
+                'slug' => $categories->slug
+            ];
+
+            return new CategoriesResource(true, 'Data Categories Created', $categoriesResponse, [
+                'code' => 201
+            ], 201);
+        } catch (\Exception $e) {
+            return new CategoriesResource(false, $e->getMessage(), null, [
+                'code' => 500
+            ], 500);
+        }
     }
 
     /**
@@ -33,7 +70,19 @@ class CategoriesController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $categories = Categories::where('uuid', $id)->first();
+
+        if (!$categories) {
+            return new CategoriesResource(true, 'Category with uuid' . $id . ' not found', null, [
+                'code' => 404
+            ], 404);
+        }
+
+        return new CategoriesResource(true,'Category with uuid ' . $id . ' found',$categories,
+  [
+                'code' => 200,
+            ], 200
+        );
     }
 
     /**
@@ -41,7 +90,38 @@ class CategoriesController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $data = $request->validate([
+            'name' => 'required|string|max:255|min:3|unique:categories,name,' . $id . ',uuid',
+        ]);
+
+        try {
+
+            $categories = Categories::where('uuid', $id)->first();
+
+            if (!$categories) {
+                return new CategoriesResource(false, 'Category with uuid' . $id . ' not found', null, [
+                    'code' => 404
+                ], 404);
+            }
+            
+            $data['slug'] = Str::slug($data['name']);
+
+            $categories->update($data);
+
+            $categoriesResponse = [
+                'uuid' => $categories->uuid,
+                'name' => $categories->name, 
+                'slug' => $categories->slug
+            ];
+
+            return new CategoriesResource(true, 'Data Categories Updated', $categoriesResponse, [
+                'code' => 200
+            ], 200);
+        } catch (\Exception $e) {
+            return new CategoriesResource(false, $e->getMessage(), null, [
+                'code' => 500
+            ], 500);
+        }
     }
 
     /**
@@ -49,6 +129,25 @@ class CategoriesController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        try {
+
+            $categories = Categories::where('uuid', $id)->first();
+
+            if (!$categories) {
+                return new CategoriesResource(false, 'Category with uuid' . $id . ' not found', null, [
+                    'code' => 404
+                ], 404);
+            }            
+
+            $categories->delete();
+
+            return new CategoriesResource(true, 'Data Categories Deleted', null, [
+                'code' => 200
+            ], 200);
+        } catch (\Exception $e) {
+            return new CategoriesResource(false, $e->getMessage(), null, [
+                'code' => 500
+            ], 500);
+        }
     }
 }

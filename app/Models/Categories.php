@@ -14,7 +14,7 @@ class Categories extends Model
     ];
 
     public static function booted(){
-        static::created(function($model){
+        static::creating(function($model){
             $model->uuid = (string) Str::uuid();
         });
     }
