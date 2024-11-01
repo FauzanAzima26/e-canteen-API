@@ -6,7 +6,7 @@ use App\Models\Categories;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\CategoriesResource;
+use App\Http\Resources\ResponseResource;
 
 class CategoriesController extends Controller
 {
@@ -20,12 +20,12 @@ class CategoriesController extends Controller
         })->latest()->paginate(10);
 
         if ($categories->isEmpty()) {
-            return new CategoriesResource(true, 'Data Categories Not Found', null, [
+            return new ResponseResource(true, 'Data Categories Not Found', null, [
                 'code' => 200
             ], 200);
         }
 
-        return new CategoriesResource(
+        return new ResponseResource(
             true,
             'List Data Categories',
             $categories,
@@ -55,11 +55,11 @@ class CategoriesController extends Controller
                 'slug' => $categories->slug
             ];
 
-            return new CategoriesResource(true, 'Data Categories Created', $categoriesResponse, [
+            return new ResponseResource(true, 'Data Categories Created', $categoriesResponse, [
                 'code' => 201
             ], 201);
         } catch (\Exception $e) {
-            return new CategoriesResource(false, $e->getMessage(), null, [
+            return new ResponseResource(false, $e->getMessage(), null, [
                 'code' => 500
             ], 500);
         }
@@ -73,12 +73,12 @@ class CategoriesController extends Controller
         $categories = Categories::where('uuid', $id)->first();
 
         if (!$categories) {
-            return new CategoriesResource(true, 'Category with uuid' . $id . ' not found', null, [
+            return new ResponseResource(true, 'Category with uuid' . $id . ' not found', null, [
                 'code' => 404
             ], 404);
         }
 
-        return new CategoriesResource(true,'Category with uuid ' . $id . ' found',$categories,
+        return new ResponseResource(true,'Category with uuid ' . $id . ' found',$categories,
   [
                 'code' => 200,
             ], 200
@@ -99,7 +99,7 @@ class CategoriesController extends Controller
             $categories = Categories::where('uuid', $id)->first();
 
             if (!$categories) {
-                return new CategoriesResource(false, 'Category with uuid' . $id . ' not found', null, [
+                return new ResponseResource(false, 'Category with uuid' . $id . ' not found', null, [
                     'code' => 404
                 ], 404);
             }
@@ -114,11 +114,11 @@ class CategoriesController extends Controller
                 'slug' => $categories->slug
             ];
 
-            return new CategoriesResource(true, 'Data Categories Updated', $categoriesResponse, [
+            return new ResponseResource(true, 'Data Categories Updated', $categoriesResponse, [
                 'code' => 200
             ], 200);
         } catch (\Exception $e) {
-            return new CategoriesResource(false, $e->getMessage(), null, [
+            return new ResponseResource(false, $e->getMessage(), null, [
                 'code' => 500
             ], 500);
         }
@@ -134,18 +134,18 @@ class CategoriesController extends Controller
             $categories = Categories::where('uuid', $id)->first();
 
             if (!$categories) {
-                return new CategoriesResource(false, 'Category with uuid' . $id . ' not found', null, [
+                return new ResponseResource(false, 'Category with uuid' . $id . ' not found', null, [
                     'code' => 404
                 ], 404);
             }            
 
             $categories->delete();
 
-            return new CategoriesResource(true, 'Data Categories Deleted', null, [
+            return new ResponseResource(true, 'Data Categories Deleted', null, [
                 'code' => 200
             ], 200);
         } catch (\Exception $e) {
-            return new CategoriesResource(false, $e->getMessage(), null, [
+            return new ResponseResource(false, $e->getMessage(), null, [
                 'code' => 500
             ], 500);
         }
