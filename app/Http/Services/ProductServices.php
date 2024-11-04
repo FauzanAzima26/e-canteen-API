@@ -43,14 +43,11 @@ class ProductServices
         return $Product;
     }
 
-    // public function update($data, $id)
-    // {
-    //     $data['slug'] = Str::slug($data['name']);
-
-    //     $Product = Product::where('uuid', $id)->first();
-
-    //     $Product->update($data);
-
-    //     return $Product;
-    // }
+    public function update($data, $id)
+    {
+        $data['slug'] = Str::slug($data['name']);
+        
+        $Product = Product::where('uuid', $id)->update($data);
+        return $Product;
+    }
 }
